@@ -48,6 +48,16 @@ async function run(){
             const tesla= await audiCollection.find(query).toArray()
             res.send(tesla)
         })
+        app.get('/bmw', async(req, res)=>{
+            const query={}
+            const tesla= await bmwCollection.find(query).toArray()
+            res.send(tesla)
+        })
+        app.get('/hyundai', async(req, res)=>{
+            const query={}
+            const tesla= await hyundaiCollection.find(query).toArray()
+            res.send(tesla)
+        })
 
 
     }
