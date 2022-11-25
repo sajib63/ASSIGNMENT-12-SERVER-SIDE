@@ -33,11 +33,13 @@ async function run(){
         const hyundaiCollection= client.db('car-reseller').collection('hyundai')
         const mercedesCollection= client.db('car-reseller').collection('mercedes')
         const lamborghiniCollection= client.db('car-reseller').collection('lamborghini')
+        const buyerCollection= client.db('car-reseller').collection('buyer')
+        const sellerCollection= client.db('car-reseller').collection('seller')
 
 
 
 
-
+// get all brands
         app.get('/tesla', async(req, res)=>{
             const query={}
             const tesla= await teslaCollection.find(query).toArray()
@@ -58,6 +60,37 @@ async function run(){
             const tesla= await hyundaiCollection.find(query).toArray()
             res.send(tesla)
         })
+        app.get('/mercedes', async(req, res)=>{
+            const query={}
+            const tesla= await mercedesCollection.find(query).toArray()
+            res.send(tesla)
+        })
+        app.get('/lamborghini', async(req, res)=>{
+            const query={}
+            const tesla= await lamborghiniCollection.find(query).toArray()
+            res.send(tesla)
+        })
+
+
+        // post seller or buyer 
+        app.post('/seller', async(req, res)=>{
+            const user=req.body;
+            if(user.position === "Buyer"){
+                const result= await buyerCollection.insertOne(user)
+                return res.send(result)
+            }
+
+            if(user.position === "Seller"){
+                const result= await sellerCollection.insertOne(user)
+                return res.send(result)
+            }
+
+            const result=await buyerCollection.insertOne(user)
+            res.send(result)
+
+        })
+
+
 
 
     }
