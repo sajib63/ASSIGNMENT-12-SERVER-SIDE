@@ -107,7 +107,7 @@ async function run() {
             const user2 = await buyerCollection.findOne(query)
             if (user || user2) {
                 const token = jwt.sign({ email }, process.env.JWT_TOKEN, { expiresIn: '1d' })
-                return res.send({token})
+                return res.send({ token })
             }
             res.status(403).send({ message: 'Forbidden Access' })
         })
@@ -116,17 +116,17 @@ async function run() {
 
         // find all sellers
 
-        app.get('/sellers', async(req, res)=>{
-            const query={}
-            const sellers=await sellerCollection.find(query).toArray()
+        app.get('/sellers', async (req, res) => {
+            const query = {}
+            const sellers = await sellerCollection.find(query).toArray()
             res.send(sellers)
         })
 
         // find all buyers
 
-        app.get('/buyers', async(req, res)=>{
-            const query={}
-            const sellers=await buyerCollection.find(query).toArray()
+        app.get('/buyers', async (req, res) => {
+            const query = {}
+            const sellers = await buyerCollection.find(query).toArray()
             res.send(sellers)
         })
 
@@ -135,17 +135,77 @@ async function run() {
 
         // for find specific one by id 
 
-        app.get('/allProduct/:id', async(req, res)=>{
-            const id=req.params.id;
-            const query={_id: ObjectId(id)}
-            const result1=await teslaCollection.findOne(query)
-            const result2=await audiCollection.findOne(query)
-            const result3=await bmwCollection.findOne(query)
-            const result4=await mercedesCollection.findOne(query)
-            const result5=await hyundaiCollection.findOne(query)
-            const result6=await lamborghiniCollection.findOne(query)
+        app.get('/allProduct/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result1 = await teslaCollection.findOne(query)
+            const result2 = await audiCollection.findOne(query)
+            const result3 = await bmwCollection.findOne(query)
+            const result4 = await mercedesCollection.findOne(query)
+            const result5 = await hyundaiCollection.findOne(query)
+            const result6 = await lamborghiniCollection.findOne(query)
 
-            res.send(result1||result2||result3||result4||result5||result6)
+            res.send(result1 || result2 || result3 || result4 || result5 || result6)
+        })
+
+
+
+
+        // add product 
+        app.post('/addProduct', async (req, res) => {
+            const products = req.body;
+
+            if (products.brand === 'tesla') {
+                const product = await teslaCollection.insertOne(products)
+                return res.send(product)
+            }
+            if (products.brand === 'audi') {
+                const product = await audiCollection.insertOne(products)
+                return res.send(product)
+            }
+            if (products.brand === 'bmw') {
+                const product = await bmwCollection.insertOne(products)
+                return res.send(product)
+            }
+            if (products.brand === 'hyundai') {
+                const product = await hyundaiCollection.insertOne(products)
+                return res.send(product)
+            }
+            if (products.brand === 'mercedes') {
+                const product = await mercedesCollection.insertOne(products)
+                return res.send(product)
+            }
+            if (products.brand === 'lamborghini') {
+                const product = await lamborghiniCollection.insertOne(products)
+                return res.send(product)
+            }
+
+
+        })
+
+
+        // get myProducts
+
+        app.get('/myProducts', async (req, res) => {
+            const email=req.query.email;
+            const query = { email: email }
+           
+
+
+            const teslaProducts = await teslaCollection.find(query).toArray()
+
+          
+
+            const audiProducts=await audiCollection.find(query).toArray()
+            const bmwProducts=await bmwCollection.find(query).toArray()
+            const hyundaiProducts=await hyundaiCollection.find(query).toArray()
+            const mercedesProducts=await mercedesCollection.find(query).toArray()
+            const lamborghiniProducts=await lamborghiniCollection.find(query).toArray()
+
+            res.send([
+                teslaProducts , audiProducts, bmwProducts, hyundaiProducts,mercedesProducts,lamborghiniProducts
+            ])
+
         })
 
 
