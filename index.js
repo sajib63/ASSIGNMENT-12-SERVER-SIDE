@@ -5,7 +5,7 @@ const { json } = require('express')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 
 
@@ -110,6 +110,42 @@ async function run() {
                 return res.send({token})
             }
             res.status(403).send({ message: 'Forbidden Access' })
+        })
+
+
+
+        // find all sellers
+
+        app.get('/sellers', async(req, res)=>{
+            const query={}
+            const sellers=await sellerCollection.find(query).toArray()
+            res.send(sellers)
+        })
+
+        // find all buyers
+
+        app.get('/buyers', async(req, res)=>{
+            const query={}
+            const sellers=await buyerCollection.find(query).toArray()
+            res.send(sellers)
+        })
+
+
+
+
+        // for find specific one by id 
+
+        app.get('/allProduct/:id', async(req, res)=>{
+            const id=req.params.id;
+            const query={_id: ObjectId(id)}
+            const result1=await teslaCollection.findOne(query)
+            const result2=await audiCollection.findOne(query)
+            const result3=await bmwCollection.findOne(query)
+            const result4=await mercedesCollection.findOne(query)
+            const result5=await hyundaiCollection.findOne(query)
+            const result6=await lamborghiniCollection.findOne(query)
+
+            res.send(result1||result2||result3||result4||result5||result6)
         })
 
 
