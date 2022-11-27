@@ -188,17 +188,17 @@ async function run() {
         // get myProducts
 
         app.get('/myProducts', async (req, res) => {
-            const email=req.query.email;
+            const email = req.query.email;
             const query = { email: email }
             const teslaProducts = await teslaCollection.find(query).toArray()
-            const audiProducts=await audiCollection.find(query).toArray()
-            const bmwProducts=await bmwCollection.find(query).toArray()
-            const hyundaiProducts=await hyundaiCollection.find(query).toArray()
-            const mercedesProducts=await mercedesCollection.find(query).toArray()
-            const lamborghiniProducts=await lamborghiniCollection.find(query).toArray()
+            const audiProducts = await audiCollection.find(query).toArray()
+            const bmwProducts = await bmwCollection.find(query).toArray()
+            const hyundaiProducts = await hyundaiCollection.find(query).toArray()
+            const mercedesProducts = await mercedesCollection.find(query).toArray()
+            const lamborghiniProducts = await lamborghiniCollection.find(query).toArray()
 
             res.send([
-                teslaProducts , audiProducts, bmwProducts, hyundaiProducts,mercedesProducts,lamborghiniProducts
+                teslaProducts, audiProducts, bmwProducts, hyundaiProducts, mercedesProducts, lamborghiniProducts
             ])
 
         })
@@ -208,17 +208,17 @@ async function run() {
         // delete my product 
 
         app.delete('/deleteMyProduct/:id', async (req, res) => {
-            const id=req.params.id;
-            const query = { _id: ObjectId(id)}
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
             const teslaProducts = await teslaCollection.deleteOne(query)
-            const audiProducts=await audiCollection.deleteOne(query)
-            const bmwProducts=await bmwCollection.deleteOne(query)
-            const hyundaiProducts=await hyundaiCollection.deleteOne(query)
-            const mercedesProducts=await mercedesCollection.deleteOne(query)
-            const lamborghiniProducts=await lamborghiniCollection.deleteOne(query)
+            const audiProducts = await audiCollection.deleteOne(query)
+            const bmwProducts = await bmwCollection.deleteOne(query)
+            const hyundaiProducts = await hyundaiCollection.deleteOne(query)
+            const mercedesProducts = await mercedesCollection.deleteOne(query)
+            const lamborghiniProducts = await lamborghiniCollection.deleteOne(query)
 
             res.send(
-                teslaProducts || audiProducts|| bmwProducts|| hyundaiProducts||mercedesProducts||lamborghiniProducts
+                teslaProducts || audiProducts || bmwProducts || hyundaiProducts || mercedesProducts || lamborghiniProducts
             )
 
         })
@@ -228,21 +228,55 @@ async function run() {
 
 
         // add  AddProduct add 
-        app.post('/booking', async(req, res)=>{
-            const booking=req.body;
-            const bookings=await bookingCollection.insertOne(booking)
+        app.post('/booking', async (req, res) => {
+            const booking = req.body;
+            const bookings = await bookingCollection.insertOne(booking)
             res.send(bookings)
         })
 
         // get  AddProduct add 
-        app.get('/getBooking', async(req, res)=>{
-            const query={};
-            const getBookings=await bookingCollection.find(query).toArray();
+        app.get('/getBooking', async (req, res) => {
+            const query = {};
+            const getBookings = await bookingCollection.find(query).toArray();
             res.send(getBookings)
         })
 
 
-       
+        // delete allUser 
+
+        app.delete('/allSeller/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const seller = await sellerCollection.deleteOne(query)
+            res.send(seller);
+        })
+
+        // verify user 
+
+        app.put('/allSeller/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    verification: "verified"
+                }
+            }
+            const seller = await sellerCollection.updateOne(filter, updateDoc, options)
+            res.send(seller);
+        })
+
+
+
+        // find verified email 
+        app.get('/verifiedEmail', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const verifiedSeller = await sellerCollection.find(query).toArray();
+            res.send(verifiedSeller)
+        })
+
+
 
 
     }
