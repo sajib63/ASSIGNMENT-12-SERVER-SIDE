@@ -251,6 +251,15 @@ async function run() {
             res.send(seller);
         })
 
+        // delete Buyer 
+
+        app.delete('/allBuyers/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const buyer = await buyerCollection.deleteOne(query)
+            res.send(buyer);
+        })
+
         // verify user 
 
         app.put('/allSeller/:id', async (req, res) => {
