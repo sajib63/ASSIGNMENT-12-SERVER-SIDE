@@ -37,6 +37,7 @@ async function run() {
         const lamborghiniCollection = client.db('car-reseller').collection('lamborghini')
         const buyerCollection = client.db('car-reseller').collection('buyer')
         const sellerCollection = client.db('car-reseller').collection('seller')
+        const advertisementCollection = client.db('car-reseller').collection('advertisement')
 
 
 
@@ -189,13 +190,7 @@ async function run() {
         app.get('/myProducts', async (req, res) => {
             const email=req.query.email;
             const query = { email: email }
-           
-
-
             const teslaProducts = await teslaCollection.find(query).toArray()
-
-          
-
             const audiProducts=await audiCollection.find(query).toArray()
             const bmwProducts=await bmwCollection.find(query).toArray()
             const hyundaiProducts=await hyundaiCollection.find(query).toArray()
@@ -206,6 +201,34 @@ async function run() {
                 teslaProducts , audiProducts, bmwProducts, hyundaiProducts,mercedesProducts,lamborghiniProducts
             ])
 
+        })
+
+
+
+        // delete my product 
+
+        app.delete('/deleteMyProduct/:id', async (req, res) => {
+            const id=req.params.id;
+            const query = { _id: ObjectId(id)}
+            const teslaProducts = await teslaCollection.deleteOne(query)
+            const audiProducts=await audiCollection.deleteOne(query)
+            const bmwProducts=await bmwCollection.deleteOne(query)
+            const hyundaiProducts=await hyundaiCollection.deleteOne(query)
+            const mercedesProducts=await mercedesCollection.deleteOne(query)
+            const lamborghiniProducts=await lamborghiniCollection.deleteOne(query)
+
+            res.send(
+                teslaProducts || audiProducts|| bmwProducts|| hyundaiProducts||mercedesProducts||lamborghiniProducts
+            )
+
+        })
+
+
+        // add advertisement product add 
+        app.post('/advertisement', async(req, res)=>{
+            const advertisementProduct=req.body;
+            const advertisement=await advertisementCollection.insertOne(advertisementProduct)
+            res.send(advertisement)
         })
 
 
