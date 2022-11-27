@@ -37,7 +37,7 @@ async function run() {
         const lamborghiniCollection = client.db('car-reseller').collection('lamborghini')
         const buyerCollection = client.db('car-reseller').collection('buyer')
         const sellerCollection = client.db('car-reseller').collection('seller')
-        const advertisementCollection = client.db('car-reseller').collection('advertisement')
+        const bookingCollection = client.db('car-reseller').collection('booking')
 
 
 
@@ -224,12 +224,25 @@ async function run() {
         })
 
 
-        // add advertisement product add 
-        app.post('/advertisement', async(req, res)=>{
-            const advertisementProduct=req.body;
-            const advertisement=await advertisementCollection.insertOne(advertisementProduct)
-            res.send(advertisement)
+
+
+
+        // add  AddProduct add 
+        app.post('/booking', async(req, res)=>{
+            const booking=req.body;
+            const bookings=await bookingCollection.insertOne(booking)
+            res.send(bookings)
         })
+
+        // get  AddProduct add 
+        app.get('/getBooking', async(req, res)=>{
+            const query={};
+            const getBookings=await bookingCollection.find(query).toArray();
+            res.send(getBookings)
+        })
+
+
+       
 
 
     }
