@@ -152,7 +152,7 @@ async function run() {
 
         // find all buyers
 
-        app.get('/buyers', verifyJWT, async (req, res) => {
+        app.get('/buyers', async (req, res) => {
 
 
             const query = {}
@@ -216,13 +216,9 @@ async function run() {
 
         // get myProducts
 
-        app.get('/myProducts', verifyJWT, async (req, res) => {
+        app.get('/myProducts',  async (req, res) => {
             const email = req.query.email;
-            const decodedEmail = req.decoded.email;
 
-            if (email !== decodedEmail) {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
 
             const query = { email: email }
             const teslaProducts = await teslaCollection.find(query).toArray()
@@ -270,19 +266,9 @@ async function run() {
         })
 
         // get  AddProduct add 
-        app.get('/getBooking', verifyJWT, async (req, res) => {
+        app.get('/getBooking', async (req, res) => {
 
             const email = req.query.email;
-
-
-            const decodedEmail = req.decoded.email;
-
-
-            if (email !== decodedEmail) {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
-
-
             const query = { email: email };
             const getBookings = await bookingCollection.find(query).toArray();
             res.send(getBookings)
@@ -372,6 +358,14 @@ async function run() {
         app.post('/advertisement', async (req, res) => {
             const advertisement = req.body;
             const advertisementProduct = await advertisementCollection.insertOne(advertisement)
+            res.send(advertisementProduct)
+        })
+
+        // get advertisement
+
+        app.get('/advertisement', async (req, res) => {
+            const query = {};
+            const advertisementProduct = await advertisementCollection.find(query).toArray()
             res.send(advertisementProduct)
         })
 
