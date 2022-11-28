@@ -4,6 +4,8 @@ const cors = require('cors')
 const { json } = require('express')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
+// for payment 
+const stripe = require("stripe")(process.env.STRIPE_SK);
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
@@ -20,8 +22,30 @@ app.use(express.json())
 
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.z2qhqgi.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri);
+
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+
+
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(403).send({ message: 'forbidden access' })
+    }
+    const token=authHeader.split(' ')[1]
+    jwt.verify(token, process.env.JWT_TOKEN, function(error, decoded){
+        if(error){
+            return res.status(403).send({ message: 'forbidden access' })
+        }
+
+        req.decoded=decoded
+        next();
+    })
+
+
+}
+
+
 
 
 
@@ -38,6 +62,8 @@ async function run() {
         const buyerCollection = client.db('car-reseller').collection('buyer')
         const sellerCollection = client.db('car-reseller').collection('seller')
         const bookingCollection = client.db('car-reseller').collection('booking')
+        const paymentCollection = client.db('car-reseller').collection('payment')
+        const reportCollection = client.db('car-reseller').collection('report')
 
 
 
@@ -125,7 +151,9 @@ async function run() {
 
         // find all buyers
 
-        app.get('/buyers', async (req, res) => {
+        app.get('/buyers',verifyJWT, async (req, res) => {
+           
+
             const query = {}
             const sellers = await buyerCollection.find(query).toArray()
             res.send(sellers)
@@ -187,8 +215,14 @@ async function run() {
 
         // get myProducts
 
-        app.get('/myProducts', async (req, res) => {
+        app.get('/myProducts', verifyJWT, async (req, res) => {
             const email = req.query.email;
+            const decodedEmail=req.decoded.email;
+           
+            if(email !== decodedEmail){
+                return res.status(403).send({message: 'forbidden access'})
+            }
+
             const query = { email: email }
             const teslaProducts = await teslaCollection.find(query).toArray()
             const audiProducts = await audiCollection.find(query).toArray()
@@ -235,11 +269,24 @@ async function run() {
         })
 
         // get  AddProduct add 
-        app.get('/getBooking', async (req, res) => {
-            const query = {};
+        app.get('/getBooking', verifyJWT, async (req, res) => {
+
+            const email = req.query.email;
+          
+
+            const decodedEmail=req.decoded.email;
+           
+           
+            if(email !== decodedEmail){
+                return res.status(403).send({message: 'forbidden access'})
+            }
+
+
+            const query = { email: email };
             const getBookings = await bookingCollection.find(query).toArray();
             res.send(getBookings)
         })
+
 
 
         // delete allUser 
@@ -286,17 +333,96 @@ async function run() {
         })
 
 
-        // get seller role 
-        app.get('/buyer/admin/:email', async(req, res)=>{
-            const email=req.params.email;
-            const query= {email: email};
-            const user = await buyerCollection.findOne(query);
+        // get admin role 
+        app.get('/buyer/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await sellerCollection.findOne(query);
 
-            res.send({isAdmin: user?.role === "admin"});
+            res.send({ isAdmin: user?.role === "admin" });
+        })
+
+        //get seller role
+        app.get('/seller/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const user = await sellerCollection.findOne(query)
+            res.send({ seller: user?.position === "Seller" })
+
         })
 
 
-    
+        // post report 
+        app.post('/report', async (req, res) => {
+            const reportData = req.body;
+            const bookings = await reportCollection.insertOne(reportData)
+            res.send(bookings)
+        })
+
+        app.get('/reportProduct', async (req, res) => {
+            const query={}
+            const reportProduct=await reportCollection.find(query).toArray()
+
+            res.send(reportProduct)
+        })
+
+
+
+        
+//PAYMENT START
+
+        // for payment
+        app.post('/create-payment-intent',async(req, res)=>{
+            const booking=req.body;
+            const sell_price=booking.sell_price;
+            const amount=sell_price * 100;
+
+            const paymentIntent=await stripe.paymentIntents.create({
+                currency:'usd',
+                amount: amount,
+                "payment_method_types":[
+                    "card"
+                ]
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+              });
+        })
+
+
+        // for payment 
+
+        app.post('/payments', async(req, res)=>{
+            const payment=req.body;
+            const result=await paymentCollection.insertOne(payment);
+
+            const id=payment.bookingId;
+            const filter={_id: ObjectId(id)};
+            const updatedDoc={
+                $set:{
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const updateResult=await bookingCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+
+        // get booking dynamic id 
+        app.get('/bookings/:id', async(req, res)=>{
+            const id=req.params.id;
+            const query={_id: ObjectId(id)}
+            const result= await bookingCollection.findOne(query)
+            res.send(result);
+        })
+
+        app.get('/bookings', async(req, res)=>{
+            
+            const query={}
+            const result= await bookingCollection.find(query).toArray()
+            res.send(result);
+        })
+
 
 
     }
