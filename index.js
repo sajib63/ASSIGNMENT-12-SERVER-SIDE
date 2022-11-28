@@ -286,6 +286,17 @@ async function run() {
         })
 
 
+        // get seller role 
+        app.get('/buyer/admin/:email', async(req, res)=>{
+            const email=req.params.email;
+            const query= {email: email};
+            const user = await buyerCollection.findOne(query);
+
+            res.send({isAdmin: user?.role === "admin"});
+        })
+
+
+    
 
 
     }
