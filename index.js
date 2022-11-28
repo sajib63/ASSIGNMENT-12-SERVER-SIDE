@@ -32,13 +32,13 @@ function verifyJWT(req, res, next) {
     if (!authHeader) {
         return res.status(403).send({ message: 'forbidden access' })
     }
-    const token=authHeader.split(' ')[1]
-    jwt.verify(token, process.env.JWT_TOKEN, function(error, decoded){
-        if(error){
+    const token = authHeader.split(' ')[1]
+    jwt.verify(token, process.env.JWT_TOKEN, function (error, decoded) {
+        if (error) {
             return res.status(403).send({ message: 'forbidden access' })
         }
 
-        req.decoded=decoded
+        req.decoded = decoded
         next();
     })
 
@@ -64,6 +64,7 @@ async function run() {
         const bookingCollection = client.db('car-reseller').collection('booking')
         const paymentCollection = client.db('car-reseller').collection('payment')
         const reportCollection = client.db('car-reseller').collection('report')
+        const advertisementCollection = client.db('car-reseller').collection('advertisement')
 
 
 
@@ -151,8 +152,8 @@ async function run() {
 
         // find all buyers
 
-        app.get('/buyers',verifyJWT, async (req, res) => {
-           
+        app.get('/buyers', verifyJWT, async (req, res) => {
+
 
             const query = {}
             const sellers = await buyerCollection.find(query).toArray()
@@ -217,10 +218,10 @@ async function run() {
 
         app.get('/myProducts', verifyJWT, async (req, res) => {
             const email = req.query.email;
-            const decodedEmail=req.decoded.email;
-           
-            if(email !== decodedEmail){
-                return res.status(403).send({message: 'forbidden access'})
+            const decodedEmail = req.decoded.email;
+
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
             }
 
             const query = { email: email }
@@ -272,13 +273,13 @@ async function run() {
         app.get('/getBooking', verifyJWT, async (req, res) => {
 
             const email = req.query.email;
-          
 
-            const decodedEmail=req.decoded.email;
-           
-           
-            if(email !== decodedEmail){
-                return res.status(403).send({message: 'forbidden access'})
+
+            const decodedEmail = req.decoded.email;
+
+
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
             }
 
 
@@ -358,68 +359,74 @@ async function run() {
             const bookings = await reportCollection.insertOne(reportData)
             res.send(bookings)
         })
-
+        // get report
         app.get('/reportProduct', async (req, res) => {
-            const query={}
-            const reportProduct=await reportCollection.find(query).toArray()
+            const query = {}
+            const reportProduct = await reportCollection.find(query).toArray()
 
             res.send(reportProduct)
         })
 
+        // post advertisement
+
+        app.post('/advertisement', async (req, res) => {
+            const advertisement = req.body;
+            const advertisementProduct = await advertisementCollection.insertOne(advertisement)
+            res.send(advertisementProduct)
+        })
 
 
-        
-//PAYMENT START
+        //PAYMENT START
 
         // for payment
-        app.post('/create-payment-intent',async(req, res)=>{
-            const booking=req.body;
-            const sell_price=booking.sell_price;
-            const amount=sell_price * 100;
+        app.post('/create-payment-intent', async (req, res) => {
+            const booking = req.body;
+            const sell_price = booking.sell_price;
+            const amount = sell_price * 100;
 
-            const paymentIntent=await stripe.paymentIntents.create({
-                currency:'usd',
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
                 amount: amount,
-                "payment_method_types":[
+                "payment_method_types": [
                     "card"
                 ]
             });
             res.send({
                 clientSecret: paymentIntent.client_secret,
-              });
+            });
         })
 
 
         // for payment 
 
-        app.post('/payments', async(req, res)=>{
-            const payment=req.body;
-            const result=await paymentCollection.insertOne(payment);
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentCollection.insertOne(payment);
 
-            const id=payment.bookingId;
-            const filter={_id: ObjectId(id)};
-            const updatedDoc={
-                $set:{
+            const id = payment.bookingId;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
                     paid: true,
                     transactionId: payment.transactionId
                 }
             }
-            const updateResult=await bookingCollection.updateOne(filter, updatedDoc)
+            const updateResult = await bookingCollection.updateOne(filter, updatedDoc)
             res.send(result);
         })
 
         // get booking dynamic id 
-        app.get('/bookings/:id', async(req, res)=>{
-            const id=req.params.id;
-            const query={_id: ObjectId(id)}
-            const result= await bookingCollection.findOne(query)
+        app.get('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await bookingCollection.findOne(query)
             res.send(result);
         })
 
-        app.get('/bookings', async(req, res)=>{
-            
-            const query={}
-            const result= await bookingCollection.find(query).toArray()
+        app.get('/bookings', async (req, res) => {
+
+            const query = {}
+            const result = await bookingCollection.find(query).toArray()
             res.send(result);
         })
 
